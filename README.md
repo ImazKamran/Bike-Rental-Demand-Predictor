@@ -98,10 +98,17 @@ Comprehensive exploratory analysis was conducted across 17,379 hourly observatio
    * Dropped `casual` and `registered` sub-counts to avoid target leakage with `cnt = casual + registered`.
    * Dropped identifiers `instant` and `dteday`.
 2. **Cyclical Continuous Transformations:**
-   * Hours ($0 - 23$) and Months ($1 - 12$) represent periodic loops. Standard integer values falsely imply that hour 23 and hour 0 are far apart.
-   * Sinusoidal representations preserve circular continuity:
-     $$\text{hr}_{\sin} = \sin\left(\frac{2\pi \times \text{hr}}{24}\right), \quad \text{hr}_{\cos} = \cos\left(\frac{2\pi \times \text{hr}}{24}\right)$$
-     $$\text{mnth}_{\sin} = \sin\left(\frac{2\pi \times \text{mnth}}{12}\right), \quad \text{mnth}_{\cos} = \cos\left(\frac{2\pi \times \text{mnth}}{12}\right)$$
+   * Hours ($0 - 23$) and Months ($1 - 12$) represent periodic loops. Standard integer values falsely imply that hour 23 and hour 0 are maximally distant.
+   * Sinusoidal representations preserve smooth circular continuity across transitions:
+
+$$
+\text{hr}_{\sin} = \sin\left(\frac{2\pi \times \text{hr}}{24}\right), \quad \text{hr}_{\cos} = \cos\left(\frac{2\pi \times \text{hr}}{24}\right)
+$$
+
+$$
+\text{mnth}_{\sin} = \sin\left(\frac{2\pi \times \text{mnth}}{12}\right), \quad \text{mnth}_{\cos} = \cos\left(\frac{2\pi \times \text{mnth}}{12}\right)
+$$
+
 3. **Categorical Dummy Encoding:**
    * Applied `pd.get_dummies(..., drop_first=True)` across `season`, `weathersit`, and `weekday` to eliminate the dummy variable trap.
 4. **Standardization:**
@@ -109,9 +116,17 @@ Comprehensive exploratory analysis was conducted across 17,379 hourly observatio
    * Total engineered feature space: **22 input features**.
 
 ### Model Architecture & Boundary Enforcement
-* **Model:** Ordinary Least Squares (OLS) Linear Regression (`LinearRegression`).
-* **Non-Negativity Constraint:** Linear regression models can output negative numbers for extreme cold or adverse weather combinations. A mathematical zero-clip boundary is applied post-inference:
-  $$\hat{y}_{\text{final}} = \max(0, \hat{y}_{\text{pred}})$$
+* **Model:** Ordinary Least Squares (OLS) Linear Regression (`LinearRegression`):
+
+$$
+\hat{y} = \beta_0 + \sum_{j=1}^{22} \beta_j X_j
+$$
+
+* **Non-Negativity Constraint:** Linear regression models can output negative values for cold nights or severe weather combinations. A mathematical zero-clip boundary constraint is applied post-inference:
+
+$$
+\hat{y}_{\text{final}} = \max(0, \hat{y}_{\text{pred}})
+$$
 
 ### Quantitative Evaluation
 Evaluated on an independent 20% holdout test partition ($n = 3,476$ samples):
