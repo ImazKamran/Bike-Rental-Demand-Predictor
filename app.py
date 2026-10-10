@@ -216,8 +216,9 @@ input_df = pd.DataFrame([{
     'weekday_6': (weekday == 6)
 }])
 
+input_scaled = input_df.copy()
 try:
-    input_scaled = scaler.transform(input_df)
+    input_scaled[['temp', 'hum', 'windspeed']] = scaler.transform(input_df[['temp', 'hum', 'windspeed']])
 except Exception:
     input_scaled = input_df
 
